@@ -78,7 +78,9 @@ class FixturesFinder extends \Hautelook\AliceBundle\Finder\FixturesFinder implem
         // Add all fixtures to the new Doctrine loader
         $loaders = [];
         foreach ($loadersPaths as $path) {
-            $loaders = array_merge($loaders, $this->getDataLoadersFromDirectory($path));
+            if (is_dir($path)) {
+                $loaders = array_merge($loaders, $this->getDataLoadersFromDirectory($path));
+            }
         }
 
         return $loaders;
@@ -95,6 +97,8 @@ class FixturesFinder extends \Hautelook\AliceBundle\Finder\FixturesFinder implem
     {
         $loaders = [];
 
+        $declaredClasses = get_declared_classes();
+
         // Get all PHP classes in given folder
         $phpClasses = [];
         $finder = SymfonyFinder::create()->depth(0)->in($path)->files()->name('*.php');
@@ -107,7 +111,7 @@ class FixturesFinder extends \Hautelook\AliceBundle\Finder\FixturesFinder implem
         $loaderInterface = 'Hautelook\AliceBundle\Doctrine\DataFixtures\LoaderInterface';
 
         // Check if PHP classes are data loaders or not
-        foreach (get_declared_classes() as $className) {
+        foreach (array_diff($declaredClasses, get_declared_classes()) as $className) {
             $reflectionClass = new \ReflectionClass($className);
             $sourceFile = $reflectionClass->getFileName();
 
